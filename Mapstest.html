@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script src="https://www.gstatic.com/firebasejs/5.8.2/firebase.js"></script>
+    <script>
+      var map;
+      var service;
+      var infowindow;
+      function initMap() {
+      
+         // Initialize Firebase
+        // TODO: Replace with your project's customized code snippet
+        var config = {
+            apiKey: "AIzaSyDAVLSg15HpAqaxghDDJ_JyqUnSXnf4PtA",
+            authDomain: "ketofinder.firebaseapp.com",
+            databaseURL: "https://ketofinder.firebaseio.com",
+            projectId: "ketofinder",
+            storageBucket: "ketofinder.appspot.com",
+            messagingSenderId: "1071855163584"
+        };
+        firebase.initializeApp(config);
+        var database = firebase.database();
+        
+        var radford = new google.maps.LatLng(37.1318,-80.5764);
+
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: radford,
+          zoom: 15,
+          styles:[
+            {
+                "featureType": "poi",
+                "stylers": [
+                {
+                    "visibility": "off"
+                }
+                ]
+            }
+        ]
+        });
+
+        var request = {
+        location: radford,
+        radius: '500',
+        type: ['restaurant']
+        };
+
+         var placesRef = database.ref('places');
+         placesRef.once('value', function(snapshot) {
+            var value = snapshot.val();
+            if(!value) {
+                const Http = new XMLHttpRequest();
+                const url='https://graph.facebook.com/search?type=place&center=37.1318,-80.5764&access_token=1888076537973350|bb2711581da97c8fe3f9ea95db72b0bd&categories=["FOOD_BEVERAGE"]&distance=1000&fields=location,name,rating,phone,price_range,website,single_line_address,about';
+                Http.open("GET", url);
+                Http.onreadystatechange = (e) => {
+                    if(Http.readyState == 4 && Http.status >= 200 && Http.status < 300) {
+                        var response = JSON.parse(Http.responseText);
+                        database.ref('places').set(response.data);
+                        setMarkers(response.data, map);
+                    }
+                };
+                Http.send();
+            } else {
+                setMarkers(value, map);
+            }
+        });
+    }
+
+      function setMarkers(data, map) {
+        data.forEach(place => {
+            var infowindow = new google.maps.InfoWindow({
+                content: getTooltipContent(place)
+            });
+            var marker = new google.maps.Marker({
+                map: map,
+                position: {
+                    lat: place.location.latitude,
+                    lng: place.location.longitude
+                },
+                label: place.name
+            });
+            marker.addListener('click', function() {
+                infowindow.open(map, marker);
+            });
+        });
+      }
+
+      function getTooltipContent(place) {
+        return '<div id="content">'+
+                    '<h4>' + place.name + ' (' + place.price_range + ')</h4>'+
+                    '<p><a href="' + place.website + '">' + place.website + '</a></p>'+
+                    '<p><a href="tel:' + place.phone.replace(/\D/g,'') + '">' + place.phone + '</a></p>'+
+                    '<p>' + place.single_line_address + '</p>'+
+                    '<p>' + place.about + '</p>'+
+                '</div>';
+      }
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1JRJS-me-GFu0v81YpaLonX6vhxMWuO8&callback=initMap"
+    async defer></script>
+  </body>
+</html>
