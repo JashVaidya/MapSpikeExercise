@@ -16,10 +16,28 @@
         margin: 0;
         padding: 0;
       }
+
+      #floating-panel {
+        position: absolute;
+        top: 10px;
+        left: 25%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: Left;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
     </style>
   </head>
   <body>
     <div id="map"></div>
+
+
+
+
     <script src="https://www.gstatic.com/firebasejs/5.8.2/firebase.js"></script>
     <script>
       var map;
@@ -41,9 +59,21 @@
         var database = firebase.database();
         
         var radford = new google.maps.LatLng(37.1318,-80.5764);
+        //Test locations
+        var blacksburg = new google.maps.LatLng(37.2147,-80.3972);
+        var christiansburg = new google.maps.LatLng(37.1629,-80.4269);
+        var roanoke = new google.maps.LatLng(37.2714,-79.9414);
+        var mechanicsville = new google.maps.LatLng(37.6498,-77.4032);
+        var richmond = new google.maps.LatLng(37.5381,-77.4303);
+        var ocean = new google.maps.LatLng(37.4170,-74.6177);
+        var sanfran = new google.maps.LatLng(37.7748,-122.4292);
+
+        //Testing value to change
+        var current_location = radford;
+        var distance_checked = 1000;
 
         map = new google.maps.Map(document.getElementById('map'), {
-          center: radford,
+          center: current_location,
           zoom: 15,
           styles:[
             {
@@ -57,8 +87,9 @@
         ]
         });
 
+
         var request = {
-        location: radford,
+        location: current_location,
         radius: '500',
         type: ['restaurant']
         };
@@ -68,7 +99,7 @@
             var value = snapshot.val();
             if(!value) {
                 const Http = new XMLHttpRequest();
-                const url='https://graph.facebook.com/search?type=place&center=37.1318,-80.5764&access_token=1888076537973350|bb2711581da97c8fe3f9ea95db72b0bd&categories=["FOOD_BEVERAGE"]&distance=1000&fields=location,name,rating,phone,price_range,website,single_line_address,about';
+                const url='https://graph.facebook.com/search?type=place&center=' + current_location.lat() + ',' + current_location.lng() + '&access_token=1888076537973350|bb2711581da97c8fe3f9ea95db72b0bd&categories=["FOOD_BEVERAGE"]&distance=' + distance_checked + '&fields=location,name,rating,phone,price_range,website,single_line_address,about';
                 Http.open("GET", url);
                 Http.onreadystatechange = (e) => {
                     if(Http.readyState == 4 && Http.status >= 200 && Http.status < 300) {
@@ -112,6 +143,8 @@
                     '<p>' + place.about + '</p>'+
                 '</div>';
       }
+
+
 
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1JRJS-me-GFu0v81YpaLonX6vhxMWuO8&callback=initMap"
